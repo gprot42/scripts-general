@@ -9,6 +9,7 @@
 #   - Checks for Homebrew (does NOT auto-install)
 #   - Installs Rosetta 2 on Apple Silicon (if needed)
 #   - Disables annoying Fn/Globe key popup
+#   - Disables Dictionary Look Up (Force Click, three-finger tap, Control-Command-D)
 #   - Applies useful Finder, Trackpad, and system preferences
 #   - Disables Gatekeeper (for easier app installation)
 #   - Disables some Apple AI/personalized advertising
@@ -152,6 +153,26 @@ disable_globe_key_popup() {
 }
 
 # ========================
+# Function: Disable Dictionary Look Up
+# ========================
+# Turns off Dictionary.app (red AA icon) Look Up. Force Click, three-finger
+# tap, and Control-Command-D will no longer open the definition popover.
+# Dictionary.app itself cannot be deleted (SIP-protected system app).
+disable_dictionary_lookup() {
+    echo "Disabling Dictionary Look Up (Force Click, three-finger tap, Control-Command-D)..." | tee -a "$LOG_FILE"
+
+    defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -int 0 2>>"$LOG_FILE"
+    defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 0 2>>"$LOG_FILE"
+    defaults write NSGlobalDomain com.apple.trackpad.forceClick -bool false 2>>"$LOG_FILE"
+    defaults -currentHost write NSGlobalDomain com.apple.trackpad.forceClick -bool false 2>>"$LOG_FILE"
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 '<dict><key>enabled</key><false/></dict>' 2>>"$LOG_FILE"
+
+    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u 2>>"$LOG_FILE"
+
+    echo "Dictionary Look Up disabled." | tee -a "$LOG_FILE"
+}
+
+# ========================
 # MAIN SCRIPT
 # ========================
 echo "=== Starting macOS Setup ===" | tee -a "$LOG_FILE"
@@ -169,6 +190,9 @@ sleep 1
 
 # Apply Globe/Fn key fix
 disable_globe_key_popup
+
+# Disable Dictionary.app Look Up popover
+disable_dictionary_lookup
 
 # ========================
 # Finder & Desktop Settings
@@ -232,6 +256,7 @@ if [ $HOMEBREW_INSTALLED -eq 0 ] && command -v dockutil >/dev/null 2>&1; then
     dockutil --remove "Pages" --allhomes 2>>"$LOG_FILE"
     dockutil --remove "Games" --allhomes 2>>"$LOG_FILE"
     dockutil --remove "iPhone Mirroring" --allhomes 2>>"$LOG_FILE"
+    dockutil --remove "Dictionary" --allhomes 2>>"$LOG_FILE"
    
     killall Dock 2>>"$LOG_FILE"
     echo "Dock cleanup completed." | tee -a "$LOG_FILE"

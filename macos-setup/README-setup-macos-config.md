@@ -14,6 +14,7 @@ This Bash script (`setup-macos-config.sh`) automates the configuration of macOS 
 * **Security Hardening**: Activates the stealth mode for the application firewall (`AF`).
 * **Privacy Controls**: Disables the creation of `.DS_Store` files on network volumes to prevent metadata leakage.
 * **System UI**: Configures the Dock to automatically hide and show.
+* **Dictionary Look Up**: Turns off Dictionary.app (red AA icon) Look Up. Force Click, three-finger tap, and Control-Command-D no longer open the definition popover. Dictionary.app cannot be deleted (SIP). The Dock cleanup also removes Dictionary if it is pinned.
 
 
 
@@ -114,7 +115,20 @@ These settings enhance system security and user privacy.
     defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
     ```
 
-### 5. Applying Changes
+### 5. Disable Dictionary Look Up
+
+Turns off the Dictionary.app definition popover. Dictionary.app itself is SIP-protected and cannot be removed.
+
+```bash
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -int 0
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 0
+defaults write NSGlobalDomain com.apple.trackpad.forceClick -bool false
+defaults -currentHost write NSGlobalDomain com.apple.trackpad.forceClick -bool false
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 '<dict><key>enabled</key><false/></dict>'
+/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+```
+
+### 6. Applying Changes
 
 After setting all the preferences, the script restarts key system processes to apply the changes without requiring a full system reboot.
 
